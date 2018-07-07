@@ -6,7 +6,7 @@
   "rules": {
     "no-console": false,
     "member-access": false,
-    "object-linteral-sort-keys": false,
+    "object-literal-sort-keys": false,
     "ordered-imports": true,
     "interface-name": false,
     "strict-null-checks": false

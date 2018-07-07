@@ -2,20 +2,31 @@
 
 ## Setup
 
+### Install
+
+```
+-D
+@types/node
+nodemon
+ts-node
+tslint-config-prettier
+typescript
+```
+
 `yarn add @types/node nodemon ts-node tslint-config-prettier typescript --dev`
 `mkdir tsconfig.json tslint.json`
 
 ```json
 // tslint.json
 {
-  "extends": ["tslint:recommended", "tslint-config-prettier"],
+  "extends": ["tslint:latest", "tslint-config-prettier"],
   "linterOptions": {
     "exclude": ["config/**/*.js", "node_modules/**/*."]
   },
   "rules": {
     "no-console": false,
     "member-access": false,
-    "object-linteral-sort-keys": false,
+    "object-literal-sort-keys": false,
     "ordered-imports": true,
     "interface-name": false,
     "strict-null-checks": false
@@ -62,7 +73,19 @@
 
 ## GraphQL and Express
 
-### part 1
+### Install
+
+```
+graphql-yoga
+morgan
+cors
+helmet
+
+-D
+@types/cors
+@types/helmet
+@types/morgan
+```
 
 `yarn add graphql-yoga morgan cors helmet`
 `yarn add @types/cors @types/helmet @types/morgan --dev`
@@ -73,3 +96,237 @@
   "prettier.semi": false,
   "prettier.singleQuote": true,
 ```
+
+## Merge Graphql files to one Graphql file
+
+어떤 디렉토리 안의 모든 그레프큐엘 파일들을 하나로 뭉쳐서 export 하기위해서 밑을 설치한다.
+
+### Install
+
+```
+graphql-tools
+merge-graphql-schemas
+```
+
+`yarn add graphql-tools merge-graphql-schemas`
+
+```js
+// ./src/schema.ts
+import { GraphQLSchema } from 'graphql'
+import { makeExecutableSchema } from 'graphql-tools'
+import { fileLoader, mergeResolvers, mergeTypes } from 'merge-graphql-schemas'
+import path from 'path'
+
+// merge-graphql-schemas
+// 1. Read all Types & Resolvers
+const allTypes: GraphQLSchema[] = fileLoader(
+  path.join(__dirname, './api/**/*.graphql')
+)
+const allResolvers: string[] = fileLoader(
+  path.join(__dirname, './api/**/*.resolvers.*')
+)
+// 2. Merge that shits
+const mergedTypes = mergeTypes(allTypes)
+const mergedResolvers = mergeResolvers(allResolvers)
+
+// graphql-tools
+// 3. Make a Merged_Schema !
+const schema = makeExecutableSchema({
+  resolvers: mergedResolvers,
+  typeDefs: mergedTypes
+})
+
+export default schema
+```
+
+## Graphql to Typescript
+
+이전 스텝에서 우린 graphql files (distributed into multiple directories) 를 하나의 file 로 로드하여 express 와 GraphQLServer 에서 사용하는법을 배웠다. 근데 문제점은 `.graphql` 안에 정의된 타입들을 resolver 에서 사용시 하나하나 우리가 정확하게 기억하기 힘들다는 점이다. 따라서,
+
+> Purpose : Graphql type 파일을 TypeScript 로 정의하여 명확하게 만든다.
+
+### Install
+
+```
+-D
+graphql-to-typescript
+gql-merge
+babel-runtime
+```
+
+`yarn add graphql-to-typescript gql-merge --dev`
+위의 디펜던시를 사용하기위해서 밑의 설치도 추가적으로 필요하다.
+`yarn add babel-runtime --dev`
+
+```json
+{
+  "scripts": {
+    "pretypes":
+      "gql-merge --out-file ./src/mergedSchema.graphql ./src/api/**/*.graphql",
+    "types":
+      "graphql-to-typescript ./src/mergedSchema.graphql ./src/types/graph.d.ts"
+  }
+}
+```
+
+**여기서 `pre` 란 prefix 를 scripts 에 사용해주었는데, 이렇게 하게되면 단순히 `yarn types`를 입력시 `yarn pretypes -> yarn types` 순으로 실행이 된다.**
+
+- `pretypes` 에서는 `mergedSchma.graphql`이란 하나의 파일로 모든 graphql 파일들을 merge 시키고
+- `types`에서는 merged 된 shcema 를 바탕으로 타입 definition 파일을 생성한다.
+
+## Typechecking Graphql Arguments
+
+이제 밑에처럼 `sayHello`에 파라메터를 추가시키고 `yarn types`를 실행해보자
+
+```graphql
+type SayHelloResponse {
+  text: String!
+  error: Boolean!
+}
+
+type Query {
+  sayHello(name: String!): SayHelloResponse!
+}
+```
+
+이후 merge 된 graphql 을 바탕으로 생성된 `graph.d.ts`를 보면
+
+```js
+export interface Query {
+  sayHello: SayHelloResponse;
+}
+
+export interface SayHelloQueryArgs {
+  name: string;
+}
+```
+
+처럼 `SayHelloQueryArgs`란게 생성되었다.
+
+이를 이용하여 이제 resolver 를 수정해보자
+
+```js
+const resolvers = {
+  Query: {
+    sayHello: (parent, args: SayHelloQueryArgs, context): SayHelloResponse => {
+      // console.log(args) 로 채크하여 코딩할 필요가 없어짐 !
+      return {
+        error: false,
+        text: 'love you ' + args.name
+      }
+    }
+  }
+}
+```
+
+위를 보면, args 의 타입정의를 이제 할 수 있으므로 보다 더 안전하고 간편하게 우리는 코딩을 할 수 있다.
+
+## Configuring TypeORM
+
+ORM
+
+- Object Relational Mapper
+- Our codes -> ORM -> SQL Queries
+
+### Install
+
+```
+typeorm
+pg = Postgres package
+```
+
+`yarn add typeorm pg`
+
+이렇게 설치를 한 이후에는 typeorm 의 구성설정 파일인 `ormConfig.ts`를 만들어주자.
+
+```js
+import { ConnectionOptions } from 'typeorm'
+
+const connectionOptions: ConnectionOptions = {
+  type: 'postgres',
+  database: 'uber_server',
+  entities: ['entities/**/*.*'],
+  logging: true,
+  synchronize: true,
+  port: 5432,
+  host: process.env.DB_ENDPOINT || 'localhost',
+  username: process.env.DB_USERNAME || 'seungUber',
+  password: process.env.DB_PASSWORD || ''
+}
+
+export default connectionOptions
+```
+
+```bash
+> psql
+psql (10.4)
+Type "help" for help.
+
+# 보다시피 ; 를 뒤에 붙여주지 않으면 실행되지 않음 !
+guieenoutis=# DROP DATABASE uber-server
+guieenoutis-# CREATE DATABASE uber-server
+
+# DB 이름안의 `-` 는 syntax error를 일으킴
+guieenoutis-# CREATE DATABASE uber-server;
+ERROR:  syntax error at or near "-"
+LINE 1: CREATE DATABASE uber-server;
+                            ^
+
+# CamelCase나 underBar를 사용해서 적어준다.
+guieenoutis=# CREATE DATABASE uberServer;
+CREATE DATABASE
+guieenoutis=# CREATE DATABASE uber_server;
+CREATE DATABASE
+
+# \q로 종료 !
+guieenoutis=# \q
+```
+
+## Creating a Virtual Environment on NodeJS
+
+먼저 `.env`파일을 만들고 안에다가 설정하고싶은 변수들을 입력해준다.
+
+```env
+DB_ENDPOINT=localhost
+DB_USERNAME=uber
+DB_PASSWORD=
+```
+
+### Install
+
+```
+dotenv
+```
+
+`yarn add dotenv --dev`
+
+설치 후,
+
+```js
+import dotenv from 'dotenv'
+
+dotenv.config() // process.env에 .env 변수들을 등록한다 !!
+console.log(process.env)
+```
+
+```bash
+{
+  ...
+  npm_node_execpath: '/usr/local/Cellar/node/9.3.0_1/bin/node',
+  npm_config_version_tag_prefix: 'v',
+  DB_ENDPOINT: 'localhost',
+  DB_USERNAME: 'uber',
+  DB_PASSWORD: ''
+}
+```
+
+`process.env`에 이렇게 추가된 것을 확인할 수 있다.
+
+그리고 우린 `.env`에 private 한 정보들을 담을것이므로, `.gitignore` 파일에
+
+```
+# dotenv environment variables file
+.env
+```
+
+를 등록시켜주는걸 잊지말자.

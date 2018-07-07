@@ -3,9 +3,7 @@
     "baseUrl": ".",
     "module": "commonjs",
     "target": "es5",
-    "lib": [
-      "es6", "dom", "esnext.asynciterable"
-    ],
+    "lib": ["es6", "dom", "esnext.asynciterable"],
     "sourceMap": true,
     "allowJs": true,
     "moduleResolution": "node",
