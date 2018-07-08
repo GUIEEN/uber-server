@@ -6,6 +6,7 @@
   "author": "Seung Kwak",
   "license": "MIT",
   "devDependencies": {
+    "@types/bcrypt": "^2.0.0",
     "@types/cors": "^2.8.4",
     "@types/helmet": "^0.0.38",
     "@types/morgan": "^1.7.35",
@@ -19,11 +20,14 @@
     "typescript": "^2.9.2"
   },
   "scripts": {
+    "predev": "yarn run types",
     "dev": "cd src && nodemon --exec ts-node index.ts -e ts,graphql",
     "pretypes": "gql-merge --out-file ./src/mergedSchema.graphql ./src/api/**/*.graphql",
     "types": "graphql-to-typescript ./src/mergedSchema.graphql ./src/types/graph.d.ts"
   },
   "dependencies": {
+    "bcrypt": "^3.0.0",
+    "class-validator": "^0.8.5",
     "cors": "^2.8.4",
     "dotenv": "^6.0.0",
     "graphql": "^0.13.2",

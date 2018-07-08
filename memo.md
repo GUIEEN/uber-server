@@ -156,6 +156,7 @@ babel-runtime
 
 `yarn add graphql-to-typescript gql-merge --dev`
 위의 디펜던시를 사용하기위해서 밑의 설치도 추가적으로 필요하다.
+
 `yarn add babel-runtime --dev`
 
 ```json
@@ -282,7 +283,7 @@ CREATE DATABASE
 guieenoutis=# \q
 ```
 
-## Creating a Virtual Environment on NodeJS
+## 11. Creating a Virtual Environment on NodeJS
 
 먼저 `.env`파일을 만들고 안에다가 설정하고싶은 변수들을 입력해준다.
 
@@ -330,3 +331,100 @@ console.log(process.env)
 ```
 
 를 등록시켜주는걸 잊지말자.
+
+## 12. User Entity GraphQL Type
+
+먼저 `/src/api/User/shared/` 를 생성한다. 이 `share` 디렉토리 안에는 graphql 의 type 만 들어갈꺼다. not resolvers, etc..
+
+그리고 서비스에 필요한 타입들이 뭘지 정의해주자.
+예를 들면 이렇게
+
+```ts
+type User {
+  id: Int!
+  email: String
+  verifiedEmail: Boolean!
+  firstName: String!
+  lastName: String!
+  age: Int
+  password: String
+  phoneNumber: String
+  verifiedPhoneNumber: Boolean!
+  profilePhoto: String
+  createdAt: String!
+  updatedAt: String
+  fullName: String
+  isDriving: Boolean!
+  isRiding: Boolean!
+  isTaken: Boolean!
+  lastLng: Float
+  lastLat: Float
+  lastOrientation: Float
+}
+```
+
+## 13. User Entity
+
+`/src/entities/User.ts`를 생성.
+
+```js
+import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm'
+
+@Entity()
+class User extends BaseEntity {
+  @PrimaryGeneratedColumn() id: number
+
+  @Column({ type: 'text', unique: true })
+  email: string
+}
+
+export default User
+```
+
+### Install
+
+```
+class-validators
+```
+
+`yarn add class-validator`
+
+class-validator 를 이용하게되면 decorator 로 entity 안에 validate 을 적어줄 수 있다.
+
+```ts
+import { IsEmail } from 'class-validator'
+
+@Entity()
+class User extends BaseEntity {
+  @PrimaryGeneratedColumn() id: number
+
+  @Column({ type: 'text', unique: true })
+  @IsEmail()
+  email: string
+```
+
+## 15. Hashing & Encrypting User Passwords
+
+### Install
+
+```
+bcrypt
+
+-D
+@types/bcrypt
+```
+
+```js
+  @BeforeInsert()
+  @BeforeUpdate()
+  async savePassword(): Promise<void> {
+    if (this.password) {
+      const hashedPassword = await this.hashPassword(this.password)
+      this.password = hashedPassword
+    }
+  }
+
+  private hashPassword(password: string): Promise<string> {
+    return bcrypt.hash(password, BCRYPT_ROUNDS)
+  }
+```
