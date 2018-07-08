@@ -5,8 +5,6 @@ type Verification {
   key: String!
   used: Boolean!
 
-  user: User
-
   createdAt: String!
   updatedAt: String!
 }

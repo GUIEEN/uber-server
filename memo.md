@@ -428,3 +428,29 @@ bcrypt
     return bcrypt.hash(password, BCRYPT_ROUNDS)
   }
 ```
+
+## 25. Resolver
+
+resolver 의 타입을 커스텀으로 지정해준다.
+
+```js
+export type Resolver = (parent: any, args: any, context: any, info: any) => any
+
+export interface Resolvers {
+  [key: string]: {
+    [key: string]: Resolver
+  };
+}
+```
+
+## 34. Introduction to Twilio
+
+### Install
+
+```
+twilio
+
+-D
+
+@types/twilio
+```
