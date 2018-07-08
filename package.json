@@ -24,7 +24,8 @@
     "predev": "yarn run types",
     "dev": "cd src && nodemon --exec ts-node index.ts -e ts,graphql",
     "pretypes": "gql-merge --out-file ./src/mergedSchema.graphql ./src/api/**/*.graphql",
-    "types": "graphql-to-typescript ./src/mergedSchema.graphql ./src/types/graph.d.ts"
+    "types": "graphql-to-typescript ./src/mergedSchema.graphql ./src/types/graph.d.ts",
+    "migrate": "ts-node -T ./node_modules/.bin/typeorm migration:create -c mig"
   },
   "dependencies": {
     "bcrypt": "^3.0.0",

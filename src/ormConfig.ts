@@ -3,7 +3,7 @@ import { ConnectionOptions } from 'typeorm'
 const connectionOptions: ConnectionOptions = {
   type: 'postgres',
   database: 'uber_server',
-  entities: ['entities/**/*.*'],
+  entities: ['entities/**/*.ts'],
   logging: true,
   synchronize: true,
   port: 5432,
