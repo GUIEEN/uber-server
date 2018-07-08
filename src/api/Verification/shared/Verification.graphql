@@ -3,6 +3,7 @@ type Verification {
   target: String! # email or password or token etc..
   payload: String! # key
   key: String!
+  verified: Boolean!
 
   createdAt: String!
   updatedAt: String!
